@@ -1,68 +1,50 @@
-// function([string1],target id,[color1])
-consoleText(['Welcome Back'], 'text', ['tomato']);
+// function([text array], target element ID, [colors array])
+consoleText(['Welcome Back!', 'Enjoy the Experience!'], 'text', ['#ff512f', '#00c6ff']);
 
 function consoleText(words, id, colors) {
-    if (colors === undefined) colors = ['#fff'];
-    var visible = true;
-    var con = document.getElementById('console');
-    var letterCount = 1;
-    var x = 1;
-    var waiting = false;
-    var target = document.getElementById(id);
-    target.setAttribute('style', 'color:' + colors[0]);
+    const target = document.getElementById(id);
+    const consoleCursor = document.getElementById('console');
+    if (!colors || colors.length === 0) colors = ['#fff'];
 
-    var textInterval = window.setInterval(function () {
-        if (letterCount === 0 && waiting === false) {
-            waiting = true;
-            target.innerHTML = words[0].substring(0, letterCount);
-            window.setTimeout(function () {
-                var usedColor = colors.shift();
-                colors.push(usedColor);
-                var usedWord = words.shift();
-                words.push(usedWord);
-                x = 1;
-                target.setAttribute('style', 'color:' + colors[0]);
-                letterCount += x;
-                waiting = false;
-            }, 1000);
-        } else if (letterCount === words[0].length + 1 && waiting === false) {
-            waiting = true;
-            window.setTimeout(function () {
-                x = -1;
-                letterCount += x;
-                waiting = false;
-                clearInterval(textInterval); // Stop the interval once animation is complete
-                hideTextAndExecuteFile(); // Call the function to hide text and execute the second file
-            }, 1000);
-        } else if (waiting === false) {
-            target.innerHTML = words[0].substring(0, letterCount);
-            letterCount += x;
-        }
-    }, 120);
+    let letterCount = 0;
+    let wordIndex = 0;
+    let isDeleting = false;
 
-    window.setInterval(function () {
-        if (visible === true) {
-            con.className = 'console-underscore hidden';
-            visible = false;
+    target.style.color = colors[wordIndex];
+
+    function updateText() {
+        const currentWord = words[wordIndex];
+
+        if (isDeleting) {
+            letterCount--;
         } else {
-            con.className = 'console-underscore';
-            visible = true;
+            letterCount++;
         }
-    }, 400);
-}
 
-// Function to hide the "Welcome Back" text and execute the second file
-function hideTextAndExecuteFile() {
-    // Hide the "Welcome Back" text
-    document.getElementById('text').style.display = 'none';
-    document.getElementById('console').style.display = 'none';
+        target.textContent = currentWord.substring(0, letterCount);
 
-    // Execute the second file or trigger some action
-    // Example: Redirect to another page
+        if (!isDeleting && letterCount === currentWord.length) {
+            isDeleting = true;
+            setTimeout(updateText, 1000); // Pause before deleting
+        } else if (isDeleting && letterCount === 0) {
+            isDeleting = false;
+            wordIndex = (wordIndex + 1) % words.length;
+            target.style.color = colors[wordIndex]; // Update color
+            setTimeout(updateText, 500); // Pause before typing next word
+        } else {
+            setTimeout(updateText, isDeleting ? 80 : 120);
+        }
+    }
+
+    function blinkCursor() {
+        consoleCursor.classList.toggle('hidden');
+    }
+
+    setInterval(blinkCursor, 400); // Blink cursor every 400ms
+    updateText();
+
+    // Redirect to a link after 3 seconds
     window.setTimeout(function () {
         window.location.href = 'https://my-all-resum.netlify.app/'; // Redirect to another page
-    }, 1000); // Wait for 1 second before loading the second file
-
-    // If you want to reload the process automatically after a while, uncomment this line
-    // setTimeout(() => { window.location.reload(); }, 5000); // Reload the page after 5 seconds
+    }, 6500);
 }
